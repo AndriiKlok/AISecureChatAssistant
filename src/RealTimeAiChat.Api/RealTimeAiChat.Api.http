@@ -1,0 +1,28 @@
+@RealTimeAiChat.Api_HostAddress = https://localhost:7001
+
+# Get all chat sessions
+GET {{RealTimeAiChat.Api_HostAddress}}/api/chatsessions
+Accept: application/json
+
+###
+
+# Create new chat session
+POST {{RealTimeAiChat.Api_HostAddress}}/api/chatsessions
+Content-Type: application/json
+
+{
+  "title": "New Chat Session"
+}
+
+###
+
+# Get messages for a session (replace {id} with actual session ID)
+GET {{RealTimeAiChat.Api_HostAddress}}/api/chatsessions/1/messages
+Accept: application/json
+
+###
+
+# Delete a chat session (replace {id} with actual session ID)
+DELETE {{RealTimeAiChat.Api_HostAddress}}/api/chatsessions/1
+
+###

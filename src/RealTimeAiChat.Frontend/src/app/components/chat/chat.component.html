@@ -1,0 +1,98 @@
+<div class="chat-container">
+  <!-- Messages Area -->
+  <div class="messages-wrapper" #messageContainer>
+    @if (!currentSession()) {
+      <div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <h2>No Chat Selected</h2>
+        <p>Select a chat from the sidebar or create a new one</p>
+      </div>
+    } @else {
+      <div class="messages-list">
+        @for (message of messages(); track message.id) {
+          <div class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
+            <div class="message-avatar">
+              @if (message.role === 'user') {
+                <span>👤</span>
+              } @else {
+                <span>🤖</span>
+              }
+            </div>
+            <div class="message-content">
+              <div class="message-bubble">
+                <div class="message-text" [innerText]="message.content"></div>
+              </div>
+              <div class="message-time">{{ message.timestamp | date: 'short' }}</div>
+            </div>
+          </div>
+        }
+        
+        <!-- Streaming Message -->
+        @if (streamingMessage()) {
+          <div class="message assistant streaming">
+            <div class="message-avatar">
+              <span>🤖</span>
+            </div>
+            <div class="message-content">
+              <div class="message-bubble">
+                <div class="message-text">
+                  <span [innerText]="streamingMessage()!.content"></span><span class="cursor">|</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        
+        <!-- AI Thinking Indicator -->
+        @if (isAiThinking() && !streamingMessage()) {
+          <div class="message assistant thinking">
+            <div class="message-avatar">
+              <span>🤖</span>
+            </div>
+            <div class="message-content">
+              <div class="message-bubble">
+                <div class="thinking-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Input Area -->
+  @if (currentSession()) {
+    <div class="input-wrapper">
+      <div class="input-container">
+        <textarea
+          #messageInput
+          [(ngModel)]="userMessage"
+          (keypress)="onKeyPress($event)"
+          [disabled]="!isConnected() || isSending()"
+          placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
+          rows="1"
+        ></textarea>
+        <button 
+          (click)="sendMessage()" 
+          [disabled]="!userMessage().trim() || !isConnected() || isSending()"
+          class="send-button">
+          @if (isSending()) {
+            <span class="spinner"></span>
+          } @else {
+            <span>➤</span>
+          }
+        </button>
+      </div>
+      
+      @if (!isConnected()) {
+        <div class="status-bar disconnected">
+          ⚠️ Disconnected from server
+        </div>
+      }
+    </div>
+  }
+</div>
