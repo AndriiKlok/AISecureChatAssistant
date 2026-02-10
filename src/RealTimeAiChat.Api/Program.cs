@@ -35,7 +35,7 @@ builder.Services.AddSignalR(options =>
 
 // Configure CORS for Angular frontend
 var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',') 
-    ?? new[] { "http://localhost:4200" };
+    ?? ["http://localhost:4200"];
 
 builder.Services.AddCors(options =>
 {

@@ -10,34 +10,53 @@ namespace RealTimeAiChat.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class ChatSessionsController : ControllerBase
+public class ChatSessionsController(
+	IChatService chatService,
+	ILogger<ChatSessionsController> logger) : ControllerBase
 {
-    private readonly IChatService _chatService;
-    private readonly ILogger<ChatSessionsController> _logger;
-
-    public ChatSessionsController(
-        IChatService chatService,
-        ILogger<ChatSessionsController> logger)
-    {
-        _chatService = chatService;
-        _logger = logger;
-    }
+    private readonly IChatService _chatService = chatService;
+    private readonly ILogger<ChatSessionsController> _logger = logger;
 
     /// <summary>
-    /// Get all chat sessions
+    /// Maps a ChatSession domain model to a ChatSessionDto
     /// </summary>
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ChatSession>>> GetSessions()
+    private static ChatSessionDto MapToDto(ChatSession session)
+    {
+        return new ChatSessionDto
+        {
+            Id = session.Id,
+            Title = session.Title,
+            CreatedAt = session.CreatedAt,
+            UpdatedAt = session.UpdatedAt,
+            UserId = session.UserId,
+            Messages = session.Messages.Select(m => new MessageDto
+            {
+                Id = m.Id,
+                SessionId = m.SessionId,
+                Role = m.Role,
+                Content = m.Content,
+                Timestamp = m.Timestamp,
+                Metadata = m.Metadata
+            }).ToList()
+        };
+    }
+
+	/// <summary>
+	/// Get all chat sessions
+	/// </summary>
+	[HttpGet]
+    public async Task<ActionResult<IEnumerable<ChatSessionDto>>> GetSessions()
     {
         var sessions = await _chatService.GetAllSessionsAsync();
-        return Ok(sessions);
+        var dtos = sessions.Select(MapToDto).ToList();
+        return Ok(dtos);
     }
 
     /// <summary>
     /// Get a specific chat session by ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<ChatSession>> GetSession(string id)
+    public async Task<ActionResult<ChatSessionDto>> GetSession(string id)
     {
         var session = await _chatService.GetSessionAsync(id);
         if (session == null)
@@ -45,18 +64,20 @@ public class ChatSessionsController : ControllerBase
             _logger.LogWarning("Session {SessionId} not found", id);
             return NotFound(new { message = $"Session {id} not found" });
         }
-        return Ok(session);
+        var dto = MapToDto(session);
+        return Ok(dto);
     }
 
     /// <summary>
     /// Create a new chat session
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<ChatSession>> CreateSession([FromBody] CreateSessionDto dto)
+    public async Task<ActionResult<ChatSessionDto>> CreateSession([FromBody] CreateSessionDto dto)
     {
         var session = await _chatService.CreateSessionAsync(dto.Title);
         _logger.LogInformation("Created new session {SessionId}", session.Id);
-        return CreatedAtAction(nameof(GetSession), new { id = session.Id }, session);
+        var responseDto = MapToDto(session);
+        return CreatedAtAction(nameof(GetSession), new { id = session.Id }, responseDto);
     }
 
     /// <summary>

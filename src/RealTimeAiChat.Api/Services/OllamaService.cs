@@ -9,26 +9,18 @@ namespace RealTimeAiChat.Api.Services;
 /// <summary>
 /// Service for integrating with Ollama AI (local LLaMA model)
 /// </summary>
-public class OllamaService : IOllamaService
+public class OllamaService(
+	HttpClient httpClient,
+	AppDbContext context,
+	IConfiguration configuration,
+	ILogger<OllamaService> logger) : IOllamaService
 {
-    private readonly HttpClient _httpClient;
-    private readonly AppDbContext _context;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<OllamaService> _logger;
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly AppDbContext _context = context;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<OllamaService> _logger = logger;
 
-    public OllamaService(
-        HttpClient httpClient,
-        AppDbContext context,
-        IConfiguration configuration,
-        ILogger<OllamaService> logger)
-    {
-        _httpClient = httpClient;
-        _context = context;
-        _configuration = configuration;
-        _logger = logger;
-    }
-
-    public async IAsyncEnumerable<string> GetStreamingResponseAsync(
+	public async IAsyncEnumerable<string> GetStreamingResponseAsync(
         string sessionId,
         string userMessage,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -147,7 +139,7 @@ public class OllamaService : IOllamaService
 
             while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
             {
-                var line = await reader.ReadLineAsync();
+				string? line = await reader.ReadLineAsync(cancellationToken);
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 

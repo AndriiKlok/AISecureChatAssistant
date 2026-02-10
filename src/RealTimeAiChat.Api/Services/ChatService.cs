@@ -7,18 +7,12 @@ namespace RealTimeAiChat.Api.Services;
 /// <summary>
 /// Service for managing chat sessions and messages
 /// </summary>
-public class ChatService : IChatService
+public class ChatService(AppDbContext context, ILogger<ChatService> logger) : IChatService
 {
-    private readonly AppDbContext _context;
-    private readonly ILogger<ChatService> _logger;
+    private readonly AppDbContext _context = context;
+    private readonly ILogger<ChatService> _logger = logger;
 
-    public ChatService(AppDbContext context, ILogger<ChatService> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
-
-    public async Task<Message> SaveMessageAsync(
+	public async Task<Message> SaveMessageAsync(
         string sessionId,
         string role,
         string content,

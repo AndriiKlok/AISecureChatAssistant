@@ -11,29 +11,21 @@ namespace RealTimeAiChat.Api.Hubs;
 /// SignalR Hub for real-time chat communication
 /// Handles WebSocket connections and streams AI responses
 /// </summary>
-public class ChatHub : Hub
+public class ChatHub(
+	AppDbContext context,
+	IChatService chatService,
+	IOllamaService ollamaService,
+	ILogger<ChatHub> logger) : Hub
 {
-    private readonly AppDbContext _context;
-    private readonly IChatService _chatService;
-    private readonly IOllamaService _ollamaService;
-    private readonly ILogger<ChatHub> _logger;
+    private readonly AppDbContext _context = context;
+    private readonly IChatService _chatService = chatService;
+    private readonly IOllamaService _ollamaService = ollamaService;
+    private readonly ILogger<ChatHub> _logger = logger;
 
-    public ChatHub(
-        AppDbContext context,
-        IChatService chatService,
-        IOllamaService ollamaService,
-        ILogger<ChatHub> logger)
-    {
-        _context = context;
-        _chatService = chatService;
-        _ollamaService = ollamaService;
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Send a message and get streaming AI response
-    /// </summary>
-    public async Task SendMessage(string sessionId, string userMessage)
+	/// <summary>
+	/// Send a message and get streaming AI response
+	/// </summary>
+	public async Task SendMessage(string sessionId, string userMessage)
     {
         try
         {

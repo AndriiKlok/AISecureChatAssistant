@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RealTimeAiChat.Domain;
 using RealTimeAiChat.Api.Services;
+using RealTimeAiChat.Api.DTOs;
 
 namespace RealTimeAiChat.Api.Controllers;
 
@@ -9,31 +10,42 @@ namespace RealTimeAiChat.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class MessagesController : ControllerBase
+public class MessagesController(
+	IChatService chatService,
+	ILogger<MessagesController> logger) : ControllerBase
 {
-    private readonly IChatService _chatService;
-    private readonly ILogger<MessagesController> _logger;
-
-    public MessagesController(
-        IChatService chatService,
-        ILogger<MessagesController> logger)
-    {
-        _chatService = chatService;
-        _logger = logger;
-    }
+    private readonly IChatService _chatService = chatService;
+    private readonly ILogger<MessagesController> _logger = logger;
 
     /// <summary>
-    /// Get all messages for a specific session
+    /// Maps a Message domain model to a MessageDto
     /// </summary>
-    [HttpGet("session/{sessionId}")]
-    public async Task<ActionResult<IEnumerable<Message>>> GetMessages(
+    private static MessageDto MapToDto(Message message)
+    {
+        return new MessageDto
+        {
+            Id = message.Id,
+            SessionId = message.SessionId,
+            Role = message.Role,
+            Content = message.Content,
+            Timestamp = message.Timestamp,
+            Metadata = message.Metadata
+        };
+    }
+
+	/// <summary>
+	/// Get all messages for a specific session
+	/// </summary>
+	[HttpGet("session/{sessionId}")]
+    public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessages(
         string sessionId,
         [FromQuery] int maxMessages = 50)
     {
         var messages = await _chatService.GetSessionHistoryAsync(sessionId, maxMessages);
+        var dtos = messages.Select(MapToDto).ToList();
         _logger.LogInformation(
             "Retrieved {Count} messages for session {SessionId}",
-            messages.Count, sessionId);
-        return Ok(messages);
+            dtos.Count, sessionId);
+        return Ok(dtos);
     }
 }

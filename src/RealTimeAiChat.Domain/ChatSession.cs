@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RealTimeAiChat.Domain;
 
 public class ChatSession
@@ -10,5 +7,5 @@ public class ChatSession
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string? UserId { get; set; }
-    public ICollection<Message> Messages { get; set; } = new List<Message>();
+    public ICollection<Message> Messages { get; set; } = [];
 }
