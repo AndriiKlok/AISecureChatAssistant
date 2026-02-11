@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using RealTimeAiChat.Domain;
-using RealTimeAiChat.Api.Services;
-using RealTimeAiChat.Api.DTOs;
+using RealTimeAiChat.Application.DTOs;
+using RealTimeAiChat.Application.Services;
 
 namespace RealTimeAiChat.Api.Controllers;
 
@@ -11,27 +10,11 @@ namespace RealTimeAiChat.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class MessagesController(
-	IChatService chatService,
+	IChatApplicationService chatApplicationService,
 	ILogger<MessagesController> logger) : ControllerBase
 {
-    private readonly IChatService _chatService = chatService;
+    private readonly IChatApplicationService _chatApplicationService = chatApplicationService;
     private readonly ILogger<MessagesController> _logger = logger;
-
-    /// <summary>
-    /// Maps a Message domain model to a MessageDto
-    /// </summary>
-    private static MessageDto MapToDto(Message message)
-    {
-        return new MessageDto
-        {
-            Id = message.Id,
-            SessionId = message.SessionId,
-            Role = message.Role,
-            Content = message.Content,
-            Timestamp = message.Timestamp,
-            Metadata = message.Metadata
-        };
-    }
 
 	/// <summary>
 	/// Get all messages for a specific session
@@ -41,11 +24,10 @@ public class MessagesController(
         string sessionId,
         [FromQuery] int maxMessages = 50)
     {
-        var messages = await _chatService.GetSessionHistoryAsync(sessionId, maxMessages);
-        var dtos = messages.Select(MapToDto).ToList();
+        var messages = await _chatApplicationService.GetSessionHistoryAsync(sessionId, maxMessages);
         _logger.LogInformation(
             "Retrieved {Count} messages for session {SessionId}",
-            dtos.Count, sessionId);
-        return Ok(dtos);
+            messages.Count(), sessionId);
+        return Ok(messages);
     }
 }

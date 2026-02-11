@@ -15,7 +15,7 @@ public interface IChatService
     /// <summary>
     /// Get chat session history
     /// </summary>
-    Task<List<Message>> GetSessionHistoryAsync(string sessionId, int maxMessages = 50);
+    Task<IEnumerable<Message>> GetSessionHistoryAsync(string sessionId, int maxMessages = 50);
 
     /// <summary>
     /// Create a new chat session
@@ -40,5 +40,5 @@ public interface IChatService
     /// <summary>
     /// Get all sessions ordered by UpdatedAt
     /// </summary>
-    Task<List<ChatSession>> GetAllSessionsAsync();
+    Task<IEnumerable<ChatSession>> GetAllSessionsAsync();
 }

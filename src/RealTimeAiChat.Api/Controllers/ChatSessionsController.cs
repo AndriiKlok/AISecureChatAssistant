@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using RealTimeAiChat.Domain;
-using RealTimeAiChat.Api.Services;
-using RealTimeAiChat.Api.DTOs;
+using RealTimeAiChat.Application.DTOs;
+using RealTimeAiChat.Application.Services;
 
 namespace RealTimeAiChat.Api.Controllers;
 
@@ -11,35 +10,11 @@ namespace RealTimeAiChat.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class ChatSessionsController(
-	IChatService chatService,
+	IChatApplicationService chatApplicationService,
 	ILogger<ChatSessionsController> logger) : ControllerBase
 {
-    private readonly IChatService _chatService = chatService;
+    private readonly IChatApplicationService _chatApplicationService = chatApplicationService;
     private readonly ILogger<ChatSessionsController> _logger = logger;
-
-    /// <summary>
-    /// Maps a ChatSession domain model to a ChatSessionDto
-    /// </summary>
-    private static ChatSessionDto MapToDto(ChatSession session)
-    {
-        return new ChatSessionDto
-        {
-            Id = session.Id,
-            Title = session.Title,
-            CreatedAt = session.CreatedAt,
-            UpdatedAt = session.UpdatedAt,
-            UserId = session.UserId,
-            Messages = session.Messages.Select(m => new MessageDto
-            {
-                Id = m.Id,
-                SessionId = m.SessionId,
-                Role = m.Role,
-                Content = m.Content,
-                Timestamp = m.Timestamp,
-                Metadata = m.Metadata
-            }).ToList()
-        };
-    }
 
 	/// <summary>
 	/// Get all chat sessions
@@ -47,9 +22,8 @@ public class ChatSessionsController(
 	[HttpGet]
     public async Task<ActionResult<IEnumerable<ChatSessionDto>>> GetSessions()
     {
-        var sessions = await _chatService.GetAllSessionsAsync();
-        var dtos = sessions.Select(MapToDto).ToList();
-        return Ok(dtos);
+        var sessions = await _chatApplicationService.GetAllSessionsAsync();
+        return Ok(sessions);
     }
 
     /// <summary>
@@ -58,14 +32,13 @@ public class ChatSessionsController(
     [HttpGet("{id}")]
     public async Task<ActionResult<ChatSessionDto>> GetSession(string id)
     {
-        var session = await _chatService.GetSessionAsync(id);
+        var session = await _chatApplicationService.GetSessionAsync(id);
         if (session == null)
         {
             _logger.LogWarning("Session {SessionId} not found", id);
             return NotFound(new { message = $"Session {id} not found" });
         }
-        var dto = MapToDto(session);
-        return Ok(dto);
+        return Ok(session);
     }
 
     /// <summary>
@@ -74,10 +47,9 @@ public class ChatSessionsController(
     [HttpPost]
     public async Task<ActionResult<ChatSessionDto>> CreateSession([FromBody] CreateSessionDto dto)
     {
-        var session = await _chatService.CreateSessionAsync(dto.Title);
+        var session = await _chatApplicationService.CreateSessionAsync(dto.Title);
         _logger.LogInformation("Created new session {SessionId}", session.Id);
-        var responseDto = MapToDto(session);
-        return CreatedAtAction(nameof(GetSession), new { id = session.Id }, responseDto);
+        return CreatedAtAction(nameof(GetSession), new { id = session.Id }, session);
     }
 
     /// <summary>
@@ -86,13 +58,12 @@ public class ChatSessionsController(
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateSession(string id, [FromBody] UpdateSessionDto dto)
     {
-        var session = await _chatService.GetSessionAsync(id);
-        if (session == null)
+        var success = await _chatApplicationService.UpdateSessionAsync(id, dto.Title);
+        if (!success)
         {
             return NotFound(new { message = $"Session {id} not found" });
         }
 
-        await _chatService.UpdateSessionAsync(id, dto.Title);
         _logger.LogInformation("Updated session {SessionId}", id);
         return NoContent();
     }
@@ -103,7 +74,7 @@ public class ChatSessionsController(
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSession(string id)
     {
-        var result = await _chatService.DeleteSessionAsync(id);
+        var result = await _chatApplicationService.DeleteSessionAsync(id);
         if (!result)
         {
             return NotFound(new { message = $"Session {id} not found" });

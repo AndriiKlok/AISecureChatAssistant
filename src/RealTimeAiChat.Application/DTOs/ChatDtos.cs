@@ -1,4 +1,4 @@
-namespace RealTimeAiChat.Api.DTOs;
+namespace RealTimeAiChat.Application.DTOs;
 
 /// <summary>
 /// DTO for creating a new chat session
@@ -26,7 +26,7 @@ public class SendMessageDto
 }
 
 /// <summary>
-/// DTO for a message in chat response
+/// DTO for a message in chat response (without circular reference)
 /// </summary>
 public class MessageDto
 {
@@ -39,7 +39,7 @@ public class MessageDto
 }
 
 /// <summary>
-/// DTO for a chat session response
+/// DTO for a chat session response (without circular reference)
 /// </summary>
 public class ChatSessionDto
 {

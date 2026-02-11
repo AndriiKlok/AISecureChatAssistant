@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using RealTimeAiChat.Api.Data;
 using RealTimeAiChat.Domain;
+using RealTimeAiChat.Application.Services;
 
 namespace RealTimeAiChat.Api.Services;
 
 /// <summary>
 /// Service for managing chat sessions and messages
+/// Implements both IChatService (internal API layer) and IChatDomainService (Application layer interface)
 /// </summary>
-public class ChatService(AppDbContext context, ILogger<ChatService> logger) : IChatService
+public class ChatService(AppDbContext context, ILogger<ChatService> logger) : IChatService, IChatDomainService
 {
     private readonly AppDbContext _context = context;
     private readonly ILogger<ChatService> _logger = logger;
@@ -46,7 +48,7 @@ public class ChatService(AppDbContext context, ILogger<ChatService> logger) : IC
         return message;
     }
 
-    public async Task<List<Message>> GetSessionHistoryAsync(string sessionId, int maxMessages = 50)
+    public async Task<IEnumerable<Message>> GetSessionHistoryAsync(string sessionId, int maxMessages = 50)
     {
         return await _context.Messages
             .Where(m => m.SessionId == sessionId)
@@ -117,7 +119,7 @@ public class ChatService(AppDbContext context, ILogger<ChatService> logger) : IC
         return true;
     }
 
-    public async Task<List<ChatSession>> GetAllSessionsAsync()
+    public async Task<IEnumerable<ChatSession>> GetAllSessionsAsync()
     {
         return await _context.ChatSessions
             .OrderByDescending(s => s.UpdatedAt)

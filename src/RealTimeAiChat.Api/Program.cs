@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RealTimeAiChat.Api.Data;
 using RealTimeAiChat.Api.Hubs;
 using RealTimeAiChat.Api.Services;
+using RealTimeAiChat.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,13 @@ builder.Services.AddHttpClient<IOllamaService, OllamaService>(client =>
 
 // Register application services
 builder.Services.AddScoped<IChatService, ChatService>();
+
+// Adapter: IChatService to IChatDomainService
+builder.Services.AddScoped<RealTimeAiChat.Application.Services.IChatDomainService>(provider =>
+    provider.GetRequiredService<IChatService>() as RealTimeAiChat.Application.Services.IChatDomainService
+    ?? throw new InvalidOperationException("ChatService must implement IChatDomainService"));
+
+builder.Services.AddScoped<IChatApplicationService, ChatApplicationService>();
 
 // Configure Logging
 builder.Logging.ClearProviders();
