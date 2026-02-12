@@ -1,0 +1,56 @@
+services:
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: src/RealTimeAiChat.Api/Dockerfile
+    container_name: ai-chat-backend
+    ports:
+      - "7001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OllamaUrl=http://host.docker.internal:11434
+      - OllamaModel=llama3.2
+      - AllowedOrigins=http://localhost:4200,http://frontend
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/chat.db
+    volumes:
+      - chat-db:/app/data
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/chatsessions"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ai-chat-network
+
+  # Frontend Angular App
+  frontend:
+    build:
+      context: ./src/RealTimeAiChat.Frontend
+      dockerfile: Dockerfile
+    container_name: ai-chat-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ai-chat-network
+
+volumes:
+  chat-db:
+    driver: local
+
+networks:
+  ai-chat-network:
+    driver: bridge

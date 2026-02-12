@@ -118,3 +118,5 @@ app.Logger.LogInformation("🤖 Ollama URL: {OllamaUrl}", builder.Configuration[
 
 app.Run();
 
+public partial class Program { }
+

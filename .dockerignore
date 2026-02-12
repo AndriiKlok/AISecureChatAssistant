@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# VS Code / VS
+.vs
+.vscode
+*.csproj.user
+*.suo
+*.user
+
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/dist/
+**/build/
+
+# Node modules
+**/node_modules/
+**/npm-debug.log
+**/.angular/
+
+# Database files
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Test files
+**/TestResults/
+**/*.trx
+
+# Documentation
+README.md
+DOCKER.md
+LICENSE
+*.md
+
+# CI/CD
+.github/
+azure-pipelines.yml
+
+# Environment files
+**/.env
+**/.env.*
+
+# Logs
+**/logs/
+**/*.log
+
+# Docker files (don't copy into image)
+Dockerfile
+.dockerignore
+docker-compose.yml

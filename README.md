@@ -1,23 +1,25 @@
 # Real-Time AI Chat Assistant 🤖💬
 
-> **Portfolio project** showcasing SignalR + Ollama integration with streaming AI responses
+> Full-stack application with SignalR + Ollama integration, streaming AI responses, and Clean Architecture
 
-![Project Status](https://img.shields.io/badge/Status-Ready%20for%20Demo-brightgreen)
+![Project Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 ![.NET version](https://img.shields.io/badge/.NET-9.0-blue)
 ![Angular version](https://img.shields.io/badge/Angular-21-red)
+![Tests](https://img.shields.io/badge/Tests-54%20Passing-success)
 
 ---
 
 ## 📋 About
 
-**Real-Time AI Chat Assistant** is a full-featured demonstration system for working with AI through real-time WebSocket communication. Created for Upwork portfolio to showcase professional skills:
+**Real-Time AI Chat Assistant** is a production-ready system for working with AI through real-time WebSocket communication with comprehensive test coverage:
 
-- ✅ **SignalR** - WebSocket real-time communication
+- ✅ **SignalR** - Real-time WebSocket bidirectional communication
 - ✅ **Ollama AI** - Local LLaMA 3.2 model with streaming responses
-- ✅ **ASP.NET Core 9.0** - Modern backend with clean architecture
+- ✅ **ASP.NET Core 9.0** - Modern backend with Clean Architecture
 - ✅ **Angular 21** - Reactive frontend with standalone components
-- ✅ **Entity Framework Core** - SQLite database with migrations
-- ✅ **Clean Architecture** - Separation of Domain, Application, Infrastructure
+- ✅ **Entity Framework Core 9.0** - SQLite database with migrations
+- ✅ **Clean Architecture** - Domain, Application, API layers properly separated
+- ✅ **Unit & Integration Tests** - 54 tests covering all layers (xUnit, Moq, FluentAssertions)
 
 ---
 
@@ -53,16 +55,17 @@ AISecureChatAssistant/
 │   ├── RealTimeAiChat.Api/              # ASP.NET Core Web API + SignalR
 │   │   ├── Controllers/                 # REST API controllers
 │   │   ├── Hubs/                        # SignalR Hub (ChatHub)
-│   │   ├── Services/                    # Business Logic (OllamaService, ChatService)
-│   │   ├── DTOs/                        # Data Transfer Objects
-│   │   ├── Data/                        # EF Core DbContext
-│   │   └── Program.cs                   # Dependency Injection, CORS, SignalR config
+│   │   ├── Services/                    # Infrastructure services (OllamaService, ChatService)
+│   │   ├── Data/                        # EF Core DbContext + Migrations
+│   │   └── Program.cs                   # DI, CORS, SignalR configuration
 │   │
-│   ├── RealTimeAiChat.Domain/           # Domain Models
-│   │   ├── ChatSession.cs               # Chat session entity
-│   │   └── Message.cs                   # Message entity (User/AI)
+│   ├── RealTimeAiChat.Application/      # Application Layer (Business Logic)
+│   │   ├── DTOs/                        # Data Transfer Objects (prevents circular refs)
+│   │   └── Services/                    # Application services (ChatApplicationService)
 │   │
-│   ├── RealTimeAiChat.Application/      # Application Layer (reserved)
+│   ├── RealTimeAiChat.Domain/           # Domain Layer (Entities)
+│   │   ├── ChatSession.cs               # Chat session aggregate
+│   │   └── Message.cs                   # Message entity
 │   │
 │   └── RealTimeAiChat.Frontend/         # Angular 21 SPA
 │       ├── src/app/
@@ -77,7 +80,14 @@ AISecureChatAssistant/
 │       └── package.json
 │
 └── tests/
-    └── RealTimeAiChat.Tests/            # Unit tests (ready for expansion)
+    └── RealTimeAiChat.Tests/            # Comprehensive test suite (54 tests)
+        ├── UnitTests/
+        │   ├── Domain/                  # Entity tests (16 tests)
+        │   ├── Application/             # Business logic tests (10 tests)
+        │   └── Services/                # Service tests (13 tests)
+        └── IntegrationTests/
+            ├── Hubs/                    # SignalR hub tests (6 tests)
+            └── Database/                # EF Core tests (9 tests)
 ```
 
 ---
@@ -114,9 +124,9 @@ dotnet restore
 dotnet run
 ```
 
-✅ API starts on: **https://localhost:7001**  
-✅ Swagger UI: **https://localhost:7001/swagger**  
-✅ SignalR Hub: **https://localhost:7001/chathub**  
+✅ API starts on: **http://localhost:7001**  
+✅ Swagger UI: **http://localhost:7001/** (root path)  
+✅ SignalR Hub: **http://localhost:7001/chathub**  
 
 SQLite database (`chat.db`) is created automatically with migrations.
 
@@ -253,27 +263,92 @@ export const environment = {
 
 ---
 
-## 📊 Performance
+## 🧪 Testing
 
-- **Response time:** < 100ms (REST API)
-- **Streaming latency:** < 50ms per chunk
-- **Bundle size:** ~351 KB (production build)
-- **Initial load:** < 1 second
+Comprehensive test suite with **54 passing tests** covering all layers:
+
+### Unit Tests (39 tests):
+- **Domain Layer** (16 tests) - Entity validation, behavior, invariants
+- **Application Layer** (10 tests) - Business logic, DTO mapping with Moq
+- **Services** (13 tests) - Data access with in-memory database
+
+### Integration Tests (15 tests):
+- **SignalR Hubs** (6 tests) - Real-time messaging, streaming, broadcasting
+- **Database** (9 tests) - EF Core operations, cascade deletes, querying
+
+**Test Stack:** xUnit 2.9, Moq 4.20, FluentAssertions 7.0, EF Core InMemory
+
+```bash
+# Run all tests
+cd tests/RealTimeAiChat.Tests
+dotnet test
+
+# Test summary: total: 54; failed: 0; succeeded: 54
+```
 
 ---
 
-## 🎯 Skills Demonstrated
+## 🐳 Docker Deployment
+
+### Quick Start with Docker Compose:
+
+**Prerequisites:** Ollama must be running on host machine
+```bash
+# Install and start Ollama (if not installed)
+ollama serve
+
+# Pull AI model
+ollama pull llama3.2
+```
+
+**Start Application:**
+```bash
+# Build and start containers
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+```
+
+**Access Services:**
+- **Frontend:** http://localhost:4200
+- **Backend API:** http://localhost:7001
+- **Swagger UI:** http://localhost:7001/ (root path)
+
+**Architecture:**
+- Frontend container (Nginx + Angular) → Port 4200
+- Backend container (.NET API + SignalR) → Port 7001
+- Ollama (Host machine) → Port 11434
+
+**Docker Images:**
+- Frontend: ~50 MB (nginx:alpine + Angular build)
+- Backend: ~235 MB (dotnet/aspnet:9.0 + app)
+- Total: ~285 MB
+
+**Volumes:**
+- `chat-db` - SQLite database persistence
+
+See [DOCKER.md](DOCKER.md) for detailed deployment guide, troubleshooting, and production configuration.
+
+---
+
+## 🎯 Technical Highlights
 
 ✅ **Real-time WebSocket** - SignalR bidirectional communication  
-✅ **AI Integration** - Ollama local LLM with streaming  
-✅ **Full-stack .NET** - ASP.NET Core 9 + Entity Framework  
-✅ **Modern Frontend** - Angular 21 with reactive patterns  
-✅ **Clean Code** - SOLID principles, dependency injection  
-✅ **Documentation** - Complete technical documentation  
+✅ **AI Integration** - Ollama local LLM with streaming responses  
+✅ **Clean Architecture** - Proper layer separation (Domain → Application → API)  
+✅ **Full-stack .NET** - ASP.NET Core 9 + Entity Framework Core 9  
+✅ **Modern Frontend** - Angular 21 with signals and reactive patterns  
+✅ **Test-Driven Development** - Comprehensive unit & integration tests  
+✅ **SOLID Principles** - Dependency injection, interface segregation  
 
-### Target Use Cases:
+### Use Cases:
 - Real-time Chat/Messaging Applications
-- AI Chatbots & Assistants
+- AI Chatbots & Virtual Assistants
+- Customer Support Systems
 - .NET Core Web API Development
 - Angular SPA Development
 - SignalR/WebSocket Projects
@@ -282,17 +357,21 @@ export const environment = {
 
 ## 📄 License
 
-**MIT License** - Free to use for portfolio/learning purposes.
+**MIT License** - Free to use for learning and commercial purposes.
 
 ---
 
 ## 👨‍💻 Author
 
 **Full-stack .NET Developer**  
-📧 Contact: via GitHub Issues  
-🌐 Portfolio Project for Upwork
+📧 Contact: [andrii.klok@gmail.com](mailto:andrii.klok@gmail.com)  
+🔗 GitHub: [github.com/AndriiKlok](https://github.com/AndriiKlok)
 
 ---
+
+## ⭐ Show Support
+
+If this project helped you understand SignalR + AI integration, give it a star! ⭐
 
 ## ⭐ Show Support
 
