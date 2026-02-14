@@ -20,7 +20,11 @@
             </div>
             <div class="message-content">
               <div class="message-bubble">
-                <div class="message-text" [innerText]="message.content"></div>
+                @if (message.role === 'assistant') {
+                  <div class="message-text" [innerHTML]="renderMarkdown(message.content)"></div>
+                } @else {
+                  <div class="message-text" [innerText]="message.content"></div>
+                }
               </div>
               <div class="message-time">{{ message.timestamp | date: 'short' }}</div>
             </div>
@@ -36,7 +40,7 @@
             <div class="message-content">
               <div class="message-bubble">
                 <div class="message-text">
-                  <span [innerText]="streamingMessage()!.content"></span><span class="cursor">|</span>
+                  <span [innerHTML]="renderMarkdown(streamingMessage()!.content)"></span><span class="cursor">|</span>
                 </div>
               </div>
             </div>

@@ -6,6 +6,8 @@ import { SignalRService } from '../../services/signalr.service';
 import { ChatService } from '../../services/chat.service';
 import { Message, ChatSession } from '../../models/chat.models';
 import { Subscription } from 'rxjs';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 @Component({
   selector: 'app-chat',
@@ -39,6 +41,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor() {
+    marked.setOptions({
+      gfm: true,
+      breaks: true
+    });
+
     // Auto-scroll on message changes
     effect(() => {
       this.messages();
@@ -57,6 +64,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     // Subscribe to SignalR events
     this.subscriptions.push(
+      this.chatService.sessionUpdated$.subscribe(updated => {
+        const current = this.currentSession();
+        if (current && current.id === updated.id) {
+          this.currentSession.set({ ...current, title: updated.title, updatedAt: updated.updatedAt });
+        }
+      }),
       this.signalR.historyLoaded$.subscribe(history => {
         this.messages.set(history);
       }),
@@ -142,6 +155,19 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     try {
       this.isSending.set(true);
+
+      if (session.title.trim().toLowerCase() === 'new chat') {
+        const newTitle = this.generateTitleFromMessage(message);
+        try {
+          await this.chatService.updateSession(session.id, { title: newTitle }).toPromise();
+          const updatedSession = { ...session, title: newTitle, updatedAt: new Date() };
+          this.currentSession.set(updatedSession);
+          this.chatService.emitSessionUpdated(updatedSession);
+        } catch (err) {
+          console.error('Failed to auto-title session:', err);
+        }
+      }
+
       await this.signalR.sendMessage(session.id, message);
       this.userMessage.set('');
       this.messageInput?.nativeElement.focus();
@@ -165,6 +191,30 @@ export class ChatComponent implements OnInit, OnDestroy {
       const element = this.messageContainer.nativeElement;
       element.scrollTop = element.scrollHeight;
     }
+  }
+
+  private generateTitleFromMessage(message: string): string {
+    const cleaned = message.replace(/\s+/g, ' ').trim();
+    if (!cleaned) return 'New Chat';
+
+    const words = cleaned.split(' ');
+    const maxWords = 6;
+    let title = words.slice(0, maxWords).join(' ');
+    if (words.length > maxWords) {
+      title += '...';
+    }
+
+    const maxLen = 60;
+    if (title.length > maxLen) {
+      title = `${title.slice(0, maxLen - 3).trim()}...`;
+    }
+
+    return title;
+  }
+
+  renderMarkdown(content: string): string {
+    const html = marked.parse(content ?? '') as string;
+    return DOMPurify.sanitize(html);
   }
 
   ngOnDestroy() {

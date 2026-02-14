@@ -37,6 +37,9 @@ artifacts/
 *.sqlite
 *.sqlite3
 
+# Local database data directory
+/data/
+
 # User-specific files
 *.csproj.user
 *.dbmdl

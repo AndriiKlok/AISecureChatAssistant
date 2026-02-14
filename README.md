@@ -290,48 +290,127 @@ dotnet test
 
 ## 🐳 Docker Deployment
 
-### Quick Start with Docker Compose:
+### Prerequisites
 
-**Prerequisites:** Ollama must be running on host machine
+⚠️ **Important:** Ollama must be running on your host machine!
+
 ```bash
-# Install and start Ollama (if not installed)
+# Install Ollama (if not installed)
+# Windows/Mac: https://ollama.com/download
+# Linux: curl -fsSL https://ollama.com/install.sh | sh
+
+# Start Ollama service
 ollama serve
 
-# Pull AI model
+# Pull LLaMA model
 ollama pull llama3.2
+
+# Verify Ollama is running
+curl http://localhost:11434/api/version
 ```
 
-**Start Application:**
+### Quick Start
+
 ```bash
-# Build and start containers
+# Start backend + frontend containers
 docker-compose up -d
 
 # View logs
 docker-compose logs -f
 
-# Stop containers
+# Stop all services
 docker-compose down
 ```
 
-**Access Services:**
+### Access Services
 - **Frontend:** http://localhost:4200
 - **Backend API:** http://localhost:7001
 - **Swagger UI:** http://localhost:7001/ (root path)
+- **Ollama (Host):** http://localhost:11434
 
-**Architecture:**
-- Frontend container (Nginx + Angular) → Port 4200
-- Backend container (.NET API + SignalR) → Port 7001
-- Ollama (Host machine) → Port 11434
+### Architecture
 
-**Docker Images:**
+```
+┌─────────────────────────────────────────┐
+│   Browser (http://localhost:4200)      │
+└────────────────┬────────────────────────┘
+                 │
+                 ↓
+┌─────────────────────────────────────────┐
+│   Frontend (Nginx + Angular)           │
+│   Container: ai-chat-frontend          │
+│   Port: 4200:80                        │
+└────────────────┬────────────────────────┘
+                 │ HTTP/WebSocket
+                 ↓
+┌─────────────────────────────────────────┐
+│   Backend (.NET API + SignalR)         │
+│   Container: ai-chat-backend           │
+│   Port: 7001:80                        │
+│   Database: ./data/chat.db (bind mount)│
+│   Connects to host via:                │
+│   host.docker.internal:11434           │
+└────────────────┬────────────────────────┘
+                 │ HTTP Streaming
+                 ↓
+┌─────────────────────────────────────────┐
+│   Ollama AI (HOST MACHINE)             │
+│   Service: ollama serve                │
+│   Port: 11434                          │
+│   Model: llama3.2 (~4.7 GB)            │
+└─────────────────────────────────────────┘
+```
+
+### Docker Images
 - Frontend: ~50 MB (nginx:alpine + Angular build)
 - Backend: ~235 MB (dotnet/aspnet:9.0 + app)
 - Total: ~285 MB
 
-**Volumes:**
-- `chat-db` - SQLite database persistence
+### Data Persistence
+- **Location:** `./data/chat.db` (in project root)
+- **Backup:** `cp ./data/chat.db ./backup/chat-backup.db`
+- **Reset:** `rm ./data/chat.db && docker-compose restart backend`)
 
-See [DOCKER.md](DOCKER.md) for detailed deployment guide, troubleshooting, and production configuration.
+### Environment Variables
+
+**Backend Container:**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ASPNETCORE_ENVIRONMENT` | Development | ASP.NET environment (Development enables Swagger) |
+| `OllamaUrl` | http://host.docker.internal:11434 | Ollama on host |
+| `OllamaModel` | llama3.2 | AI model name |
+| `AllowedOrigins` | http://localhost:4200 | CORS origins |
+
+**Linux Note:** If `host.docker.internal` doesn't work, use `http://172.17.0.1:11434`
+
+### Troubleshooting
+
+**Cannot connect to Ollama:**
+```bash
+# Verify Ollama is running
+curl http://localhost:11434/api/version
+
+# Test from container
+docker exec -it ai-chat-backend curl http://host.docker.internal:11434/api/version
+```
+
+**Build fails:**
+```bash
+# Clean rebuild
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+**View logs:**
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
 
 ---
 
@@ -354,29 +433,3 @@ See [DOCKER.md](DOCKER.md) for detailed deployment guide, troubleshooting, and p
 - SignalR/WebSocket Projects
 
 ---
-
-## 📄 License
-
-**MIT License** - Free to use for learning and commercial purposes.
-
----
-
-## 👨‍💻 Author
-
-**Full-stack .NET Developer**  
-📧 Contact: [andrii.klok@gmail.com](mailto:andrii.klok@gmail.com)  
-🔗 GitHub: [github.com/AndriiKlok](https://github.com/AndriiKlok)
-
----
-
-## ⭐ Show Support
-
-If this project helped you understand SignalR + AI integration, give it a star! ⭐
-
-## ⭐ Show Support
-
-If this project helped you understand SignalR + AI integration, give it a star! ⭐
-
----
-
-**Created with ❤️ for Upwork Portfolio**

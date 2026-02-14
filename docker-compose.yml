@@ -14,7 +14,7 @@ services:
       - AllowedOrigins=http://localhost:4200,http://frontend
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/chat.db
     volumes:
-      - chat-db:/app/data
+      - ./data:/app/data
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -46,10 +46,6 @@ services:
       start_period: 5s
     networks:
       - ai-chat-network
-
-volumes:
-  chat-db:
-    driver: local
 
 networks:
   ai-chat-network:

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { ChatSession, CreateSessionDto, UpdateSessionDto, Message } from '../models/chat.models';
 import { environment } from '../../environments/environment';
 
@@ -10,6 +10,8 @@ import { environment } from '../../environments/environment';
 export class ChatService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+
+  sessionUpdated$ = new Subject<ChatSession>();
 
   // Sessions
   getAllSessions(): Observable<ChatSession[]> {
@@ -37,5 +39,9 @@ export class ChatService {
     return this.http.get<Message[]>(
       `${this.apiUrl}/api/messages/session/${sessionId}?maxMessages=${maxMessages}`
     );
+  }
+
+  emitSessionUpdated(session: ChatSession): void {
+    this.sessionUpdated$.next(session);
   }
 }

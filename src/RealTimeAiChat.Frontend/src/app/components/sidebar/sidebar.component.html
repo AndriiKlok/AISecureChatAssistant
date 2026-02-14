@@ -1,4 +1,4 @@
-<div class="sidebar">
+<div class="sidebar" (click)="closeContextMenu()">
   <!-- Header -->
   <div class="sidebar-header">
     <h1 class="title">
@@ -31,7 +31,8 @@
         <a 
           [routerLink]="['/chat', session.id]"
           routerLinkActive="active"
-          class="session-item">
+          class="session-item"
+          (contextmenu)="openContextMenu($event, session)">
           <div class="session-content">
             <div class="session-title">{{ session.title }}</div>
             <div class="session-date">{{ formatDate(session.updatedAt) }}</div>
@@ -46,6 +47,17 @@
       }
     }
   </div>
+
+  @if (contextMenuVisible() && contextMenuSession()) {
+    <div
+      class="context-menu"
+      [style.top.px]="contextMenuPosition().y"
+      [style.left.px]="contextMenuPosition().x"
+      (click)="$event.stopPropagation()">
+      <button class="context-menu-item" (click)="renameSessionFromMenu()">Rename</button>
+      <button class="context-menu-item danger" (click)="deleteSessionFromMenu()">Delete</button>
+    </div>
+  }
 
   <!-- Footer -->
   <div class="sidebar-footer">
